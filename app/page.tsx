@@ -1,5 +1,6 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -8,59 +9,67 @@ import { Star, Zap } from "lucide-react"
 import Link from "next/link"
 import Header from "@/components/header"
 import Footer from "@/components/footer"
+import { fetchProducts, fetchCategories } from "@/lib/api"
+import { Product, Category } from "@/lib/types"
 
 export default function HomePage() {
-  const featuredProducts = [
-    {
-      id: 1,
-      name: "Fone Bluetooth Premium",
-      originalPrice: "R$ 299,90",
-      salePrice: "R$ 89,90",
-      discount: "70%",
-      rating: 4.8,
-      reviews: 2847,
-      image: "/placeholder.svg?height=200&width=200",
-    },
-    {
-      id: 2,
-      name: "Smartwatch Fitness",
-      originalPrice: "R$ 599,90",
-      salePrice: "R$ 199,90",
-      discount: "67%",
-      rating: 4.9,
-      reviews: 1523,
-      image: "/placeholder.svg?height=200&width=200",
-    },
-    {
-      id: 3,
-      name: "Kit Skincare Completo",
-      originalPrice: "R$ 249,90",
-      salePrice: "R$ 79,90",
-      discount: "68%",
-      rating: 4.7,
-      reviews: 3241,
-      image: "/placeholder.svg?height=200&width=200",
-    },
-    {
-      id: 4,
-      name: "Carregador Portátil 20000mAh",
-      originalPrice: "R$ 179,90",
-      salePrice: "R$ 59,90",
-      discount: "67%",
-      rating: 4.6,
-      reviews: 1876,
-      image: "/placeholder.svg?height=200&width=200",
-    },
-  ]
+  const [featuredProducts, setFeaturedProducts] = useState<Product[]>([])
+  const [categories, setCategories] = useState<Category[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  const categories = [
-    { name: "Eletrônicos", icon: "📱", deals: "2.847" },
-    { name: "Casa & Jardim", icon: "🏠", deals: "1.923" },
-    { name: "Moda", icon: "👕", deals: "3.156" },
-    { name: "Beleza", icon: "💄", deals: "1.654" },
-    { name: "Esportes", icon: "⚽", deals: "987" },
-    { name: "Livros", icon: "📚", deals: "743" },
-  ]
+  // Mapeamento de ícones para categorias
+  const categoryIcons: { [key: string]: string } = {
+    'tecnologia': '📱',
+    'casa': '🏠',
+    'moda': '👕',
+    'beleza': '💄',
+    'esportes': '⚽',
+    'livros': '📚',
+    'perfumaria': '💄',
+    'eletronicos': '📱',
+    'default': '🛍️'
+  }
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setLoading(true)
+        setError(null)
+        
+        // Carregar produtos em destaque (primeiros 4)
+        const productsResponse = await fetchProducts({ page: 1, limit: 4 })
+        setFeaturedProducts(productsResponse.data)
+        
+        // Carregar categorias
+        const categoriesResponse = await fetchCategories()
+        setCategories(categoriesResponse)
+        
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'Erro ao carregar dados'
+        setError(errorMessage)
+        console.error('Erro ao carregar dados da homepage:', err)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadData()
+  }, [])
+
+  // Função para formatar preço
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    }).format(price)
+  }
+
+  // Função para obter ícone da categoria
+  const getCategoryIcon = (categoryName: string) => {
+    const key = categoryName.toLowerCase().replace(/\s+/g, '')
+    return categoryIcons[key] || categoryIcons.default
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-red-600 to-red-700">
@@ -141,48 +150,77 @@ export default function HomePage() {
             <p className="text-xl text-gray-600">Produtos selecionados com os maiores descontos!</p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {featuredProducts.map((product) => (
-              <Card
-                key={product.id}
-                className="overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2"
-              >
-                <div className="relative">
-                  <Image
-                    src={product.image || "/placeholder.svg"}
-                    alt={product.name}
-                    width={200}
-                    height={200}
-                    className="w-full h-48 object-cover"
-                  />
-                  <Badge className="absolute top-2 left-2 bg-red-600 text-white font-bold">-{product.discount}</Badge>
-                </div>
-                <CardContent className="p-4">
-                  <h4 className="font-bold text-gray-800 mb-2 line-clamp-2">{product.name}</h4>
-                  <div className="flex items-center mb-2">
-                    <div className="flex items-center">
-                      {[...Array(5)].map((_, i) => (
-                        <Star
-                          key={i}
-                          className={`h-4 w-4 ${
-                            i < Math.floor(product.rating) ? "text-yellow-400 fill-current" : "text-gray-300"
-                          }`}
-                        />
-                      ))}
-                    </div>
-                    <span className="text-sm text-gray-600 ml-2">({product.reviews})</span>
+          {loading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {[...Array(4)].map((_, i) => (
+                <Card key={i} className="overflow-hidden animate-pulse">
+                  <div className="bg-gray-300 h-48 w-full"></div>
+                  <CardContent className="p-4">
+                    <div className="h-4 bg-gray-300 rounded mb-2"></div>
+                    <div className="h-4 bg-gray-300 rounded w-3/4 mb-2"></div>
+                    <div className="h-6 bg-gray-300 rounded w-1/2 mb-3"></div>
+                    <div className="h-10 bg-gray-300 rounded"></div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : error ? (
+            <div className="text-center py-8">
+              <p className="text-red-600 mb-4">Erro ao carregar produtos: {error}</p>
+              <Button onClick={() => window.location.reload()} className="bg-red-600 hover:bg-red-700">
+                Tentar Novamente
+              </Button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {featuredProducts.map((product) => (
+                <Card
+                  key={product.id}
+                  className="overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2"
+                >
+                  <div className="relative">
+                    <Image
+                      src={product.image_url || "/placeholder.svg"}
+                      alt={product.title}
+                      width={200}
+                      height={200}
+                      className="w-full h-48 object-cover"
+                    />
+                    <Badge className="absolute top-2 left-2 bg-red-600 text-white font-bold">
+                      OFERTA
+                    </Badge>
                   </div>
-                  <div className="flex items-center justify-between mb-3">
-                    <div>
-                      <div className="text-sm text-gray-500 line-through">{product.originalPrice}</div>
-                      <div className="text-xl font-black text-red-600">{product.salePrice}</div>
+                  <CardContent className="p-4">
+                    <h4 className="font-bold text-gray-800 mb-2 line-clamp-2">{product.title}</h4>
+                    <div className="flex items-center mb-2">
+                      <div className="flex items-center">
+                        {[...Array(5)].map((_, i) => (
+                          <Star
+                            key={i}
+                            className={`h-4 w-4 ${
+                              i < 4 ? "text-yellow-400 fill-current" : "text-gray-300"
+                            }`}
+                          />
+                        ))}
+                      </div>
+                      <span className="text-sm text-gray-600 ml-2">(4.5)</span>
                     </div>
-                  </div>
-                  <Button className="w-full bg-red-600 hover:bg-red-700 text-white font-bold">Ver na Shopee</Button>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                    <div className="flex items-center justify-between mb-3">
+                      <div>
+                        <div className="text-xl font-black text-red-600">{formatPrice(product.price)}</div>
+                      </div>
+                    </div>
+                    <Button 
+                      className="w-full bg-red-600 hover:bg-red-700 text-white font-bold"
+                      onClick={() => window.open(product.affiliate_url, '_blank', 'noopener,noreferrer')}
+                    >
+                      Ver na Shopee
+                    </Button>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
@@ -194,17 +232,29 @@ export default function HomePage() {
             <p className="text-xl text-gray-600">Explore ofertas por categoria</p>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
-            {categories.map((category, index) => (
-              <Link key={index} href={`/ofertas?categoria=${encodeURIComponent(category.name)}`}>
-                <Card className="text-center p-6 hover:shadow-lg transition-all duration-300 cursor-pointer hover:bg-red-50 transform hover:-translate-y-1">
-                  <div className="text-4xl mb-3">{category.icon}</div>
-                  <h4 className="font-bold text-gray-800 mb-2">{category.name}</h4>
-                  <p className="text-sm text-red-600 font-medium">{category.deals} ofertas</p>
+          {loading ? (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
+              {[...Array(6)].map((_, i) => (
+                <Card key={i} className="text-center p-6 animate-pulse">
+                  <div className="bg-gray-300 h-12 w-12 rounded-full mx-auto mb-3"></div>
+                  <div className="h-4 bg-gray-300 rounded mb-2"></div>
+                  <div className="h-3 bg-gray-300 rounded w-3/4 mx-auto"></div>
                 </Card>
-              </Link>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
+              {categories.slice(0, 6).map((category) => (
+                <Link key={category.id} href={`/ofertas?categoria=${category.slug}`}>
+                  <Card className="text-center p-6 hover:shadow-lg transition-all duration-300 cursor-pointer hover:bg-red-50 transform hover:-translate-y-1">
+                    <div className="text-4xl mb-3">{getCategoryIcon(category.name)}</div>
+                    <h4 className="font-bold text-gray-800 mb-2">{category.name}</h4>
+                    <p className="text-sm text-red-600 font-medium">Ver ofertas</p>
+                  </Card>
+                </Link>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 

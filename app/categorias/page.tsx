@@ -1,96 +1,82 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { TrendingUp } from "lucide-react"
 import Link from "next/link"
 import Header from "@/components/header"
 import Footer from "@/components/footer"
+import { fetchCategories } from "@/lib/api"
+import { Category } from "@/lib/types"
 
 export default function CategoriasPage() {
-  const categories = [
-    {
-      name: "Eletrônicos",
-      icon: "📱",
-      deals: "2.847",
-      description: "Smartphones, fones, carregadores e mais",
-      trending: ["iPhone", "Samsung", "Xiaomi", "Fones Bluetooth"],
-      discount: "até 85%",
-      image: "/placeholder.svg?height=300&width=400&text=Eletrônicos",
-    },
-    {
-      name: "Casa & Jardim",
-      icon: "🏠",
-      deals: "1.923",
-      description: "Decoração, utensílios e ferramentas",
-      trending: ["Panelas", "Organizadores", "Plantas", "Ferramentas"],
-      discount: "até 75%",
-      image: "/placeholder.svg?height=300&width=400&text=Casa+Jardim",
-    },
-    {
-      name: "Moda",
-      icon: "👕",
-      deals: "3.156",
-      description: "Roupas, sapatos e acessórios",
-      trending: ["Vestidos", "Tênis", "Bolsas", "Relógios"],
-      discount: "até 80%",
-      image: "/placeholder.svg?height=300&width=400&text=Moda",
-    },
-    {
-      name: "Beleza",
-      icon: "💄",
-      deals: "1.654",
-      description: "Skincare, maquiagem e perfumes",
-      trending: ["Skincare", "Base", "Perfumes", "Cremes"],
-      discount: "até 70%",
-      image: "/placeholder.svg?height=300&width=400&text=Beleza",
-    },
-    {
-      name: "Esportes",
-      icon: "⚽",
-      deals: "987",
-      description: "Equipamentos e roupas esportivas",
-      trending: ["Tênis", "Roupas Fitness", "Suplementos", "Equipamentos"],
-      discount: "até 65%",
-      image: "/placeholder.svg?height=300&width=400&text=Esportes",
-    },
-    {
-      name: "Livros",
-      icon: "📚",
-      deals: "743",
-      description: "Livros físicos e digitais",
-      trending: ["Autoajuda", "Romance", "Técnicos", "Infantis"],
-      discount: "até 60%",
-      image: "/placeholder.svg?height=300&width=400&text=Livros",
-    },
-    {
-      name: "Automotivo",
-      icon: "🚗",
-      deals: "1.234",
-      description: "Acessórios e peças para veículos",
-      trending: ["Pneus", "Óleo", "Acessórios", "Ferramentas"],
-      discount: "até 55%",
-      image: "/placeholder.svg?height=300&width=400&text=Automotivo",
-    },
-    {
-      name: "Pet Shop",
-      icon: "🐕",
-      deals: "892",
-      description: "Produtos para seus pets",
-      trending: ["Ração", "Brinquedos", "Camas", "Coleiras"],
-      discount: "até 70%",
-      image: "/placeholder.svg?height=300&width=400&text=Pet+Shop",
-    },
-    {
-      name: "Bebês",
-      icon: "👶",
-      deals: "1.567",
-      description: "Tudo para o seu bebê",
-      trending: ["Fraldas", "Roupinhas", "Brinquedos", "Mamadeiras"],
-      discount: "até 65%",
-      image: "/placeholder.svg?height=300&width=400&text=Bebês",
-    },
-  ]
+  const [categories, setCategories] = useState<Category[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  // Mapeamento de ícones para categorias
+  const categoryIcons: { [key: string]: string } = {
+    'tecnologia': '📱',
+    'casa': '🏠',
+    'moda': '👕',
+    'beleza': '💄',
+    'esportes': '⚽',
+    'livros': '📚',
+    'perfumaria': '💄',
+    'eletronicos': '📱',
+    'automotivo': '🚗',
+    'petshop': '🐕',
+    'bebes': '👶',
+    'default': '🛍️'
+  }
+
+  // Descrições padrão para categorias
+  const categoryDescriptions: { [key: string]: string } = {
+    'tecnologia': 'Smartphones, fones, carregadores e mais',
+    'casa': 'Decoração, utensílios e ferramentas',
+    'moda': 'Roupas, sapatos e acessórios',
+    'beleza': 'Skincare, maquiagem e perfumes',
+    'esportes': 'Equipamentos e roupas esportivas',
+    'livros': 'Livros físicos e digitais',
+    'perfumaria': 'Perfumes e fragrâncias',
+    'eletronicos': 'Eletrônicos e gadgets',
+    'automotivo': 'Acessórios e peças para veículos',
+    'petshop': 'Produtos para seus pets',
+    'bebes': 'Tudo para o seu bebê',
+    'default': 'Produtos diversos com ótimos preços'
+  }
+
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        setLoading(true)
+        setError(null)
+        const categoriesData = await fetchCategories()
+        setCategories(categoriesData)
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'Erro ao carregar categorias'
+        setError(errorMessage)
+        console.error('Erro ao carregar categorias:', err)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadCategories()
+  }, [])
+
+  // Função para obter ícone da categoria
+  const getCategoryIcon = (categoryName: string) => {
+    const key = categoryName.toLowerCase().replace(/\s+/g, '')
+    return categoryIcons[key] || categoryIcons.default
+  }
+
+  // Função para obter descrição da categoria
+  const getCategoryDescription = (categoryName: string) => {
+    const key = categoryName.toLowerCase().replace(/\s+/g, '')
+    return categoryDescriptions[key] || categoryDescriptions.default
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -111,50 +97,89 @@ export default function CategoriasPage() {
       {/* Categories Grid */}
       <section className="py-16">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {categories.map((category, index) => (
-              <Card
-                key={index}
-                className="overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 cursor-pointer group"
+          {loading && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {[...Array(6)].map((_, index) => (
+                <Card key={index} className="animate-pulse overflow-hidden">
+                  <div className="h-48 bg-gray-200"></div>
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="w-32 h-8 bg-gray-200 rounded"></div>
+                      <div className="w-16 h-6 bg-gray-200 rounded"></div>
+                    </div>
+                    <div className="w-full h-4 bg-gray-200 rounded mb-4"></div>
+                    <div className="w-full h-10 bg-gray-200 rounded"></div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+
+          {error && (
+            <div className="text-center py-12">
+              <div className="text-red-500 mb-4">
+                <p className="text-lg font-semibold">Erro ao carregar categorias</p>
+                <p className="text-sm">{error}</p>
+              </div>
+              <Button 
+                onClick={() => window.location.reload()} 
+                className="bg-red-600 hover:bg-red-700 text-white font-bold"
               >
-                <div className="relative h-48 bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center">
-                  <div className="text-8xl group-hover:scale-110 transition-transform duration-300">
-                    {category.icon}
-                  </div>
-                  <div className="absolute top-4 right-4 bg-yellow-400 text-red-700 px-3 py-1 rounded-full font-bold text-sm">
-                    {category.discount}
-                  </div>
-                </div>
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-2xl font-black text-gray-800">{category.name}</h3>
-                    <div className="flex items-center text-red-600">
-                      <TrendingUp className="h-4 w-4 mr-1" />
-                      <span className="font-bold">{category.deals}</span>
+                Tentar Novamente
+              </Button>
+            </div>
+          )}
+
+          {!loading && !error && categories.length === 0 && (
+            <div className="text-center py-12">
+              <p className="text-gray-500 text-lg">Nenhuma categoria encontrada</p>
+            </div>
+          )}
+
+          {!loading && !error && categories.length > 0 && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {categories.map((category) => (
+                <Card
+                  key={category.id}
+                  className="overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 cursor-pointer group"
+                >
+                  <div className="relative h-48 bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center">
+                    <div className="text-8xl group-hover:scale-110 transition-transform duration-300">
+                      {getCategoryIcon(category.name)}
+                    </div>
+                    <div className="absolute top-4 right-4 bg-yellow-400 text-red-700 px-3 py-1 rounded-full font-bold text-sm">
+                      até 80%
                     </div>
                   </div>
-                  <p className="text-gray-600 mb-4">{category.description}</p>
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="text-2xl font-black text-gray-800">{category.name}</h3>
+                      <div className="flex items-center text-red-600">
+                        <TrendingUp className="h-4 w-4 mr-1" />
+                        <span className="font-bold">ofertas</span>
+                      </div>
+                    </div>
+                    <p className="text-gray-600 mb-4">{getCategoryDescription(category.name)}</p>
 
-                  <div className="mb-4">
-                    <h4 className="font-bold text-sm text-gray-700 mb-2">🔥 Mais Procurados:</h4>
-                    <div className="flex flex-wrap gap-2">
-                      {category.trending.map((item, i) => (
-                        <span key={i} className="bg-gray-100 text-gray-700 px-2 py-1 rounded-full text-xs font-medium">
-                          {item}
+                    <div className="mb-4">
+                      <h4 className="font-bold text-sm text-gray-700 mb-2">🔥 Categoria:</h4>
+                      <div className="flex flex-wrap gap-2">
+                        <span className="bg-gray-100 text-gray-700 px-2 py-1 rounded-full text-xs font-medium">
+                          {category.name}
                         </span>
-                      ))}
+                      </div>
                     </div>
-                  </div>
 
-                  <Link href={`/ofertas?categoria=${encodeURIComponent(category.name)}`}>
-                    <Button className="w-full bg-red-600 hover:bg-red-700 text-white font-bold">
-                      Ver {category.deals} Ofertas
-                    </Button>
-                  </Link>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                    <Link href={`/categorias/${category.slug}`}>
+                      <Button className="w-full bg-red-600 hover:bg-red-700 text-white font-bold">
+                        Ver Ofertas
+                      </Button>
+                    </Link>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
