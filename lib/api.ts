@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import {
   Product,
   Category,
@@ -79,56 +78,4 @@ export async function fetchCategories(): Promise<Category[]> {
   } else {
     throw new Error(response.message || 'Erro ao carregar categorias');
   }
-}
-
-// Hook personalizado para produtos (para usar em componentes React)
-export function useProducts() {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [pagination, setPagination] = useState<Pagination | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
-  const loadProducts = async (params: ProductSearchParams = {}) => {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      const result = await fetchProducts(params);
-      setProducts(result.data);
-      setPagination(result.pagination);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido';
-      setError(errorMessage);
-      console.error('Erro ao carregar produtos:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return { products, loading, pagination, error, loadProducts };
-}
-
-// Hook personalizado para categorias
-export function useCategories() {
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const loadCategories = async () => {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      const result = await fetchCategories();
-      setCategories(result);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido';
-      setError(errorMessage);
-      console.error('Erro ao carregar categorias:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return { categories, loading, error, loadCategories };
 }
