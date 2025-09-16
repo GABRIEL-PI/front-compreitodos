@@ -12,8 +12,11 @@ import { Category } from "@/lib/types"
 
 export default function CategoriasPage() {
   const [categories, setCategories] = useState<Category[]>([])
+  const [displayedCategories, setDisplayedCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [itemsPerPage] = useState(6)
+  const [currentPage, setCurrentPage] = useState(1)
 
   // Mapeamento de ícones para categorias
   const categoryIcons: { [key: string]: string } = {
@@ -54,6 +57,8 @@ export default function CategoriasPage() {
         setError(null)
         const categoriesData = await fetchCategories()
         setCategories(categoriesData)
+        // Inicializar com as primeiras categorias
+        setDisplayedCategories(categoriesData.slice(0, itemsPerPage))
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'Erro ao carregar categorias'
         setError(errorMessage)
@@ -65,6 +70,19 @@ export default function CategoriasPage() {
 
     loadCategories()
   }, [])
+
+  // Função para carregar mais categorias
+  const loadMoreCategories = () => {
+    const nextPage = currentPage + 1
+    const startIndex = 0
+    const endIndex = nextPage * itemsPerPage
+    const newDisplayedCategories = categories.slice(startIndex, endIndex)
+    setDisplayedCategories(newDisplayedCategories)
+    setCurrentPage(nextPage)
+  }
+
+  // Verificar se há mais categorias para carregar
+  const hasMoreCategories = displayedCategories.length < categories.length
 
   // Função para obter ícone da categoria
   const getCategoryIcon = (categoryName: string) => {
@@ -115,6 +133,19 @@ export default function CategoriasPage() {
             </div>
           )}
 
+          {/* Botão Ver Mais */}
+          {!loading && !error && hasMoreCategories && (
+            <div className="text-center mt-12">
+              <Button
+                onClick={loadMoreCategories}
+                size="lg"
+                className="bg-red-600 hover:bg-red-700 text-white font-bold px-8 py-4 rounded-full text-lg"
+              >
+                Ver Mais Categorias
+              </Button>
+            </div>
+          )}
+
           {error && (
             <div className="text-center py-12">
               <div className="text-red-500 mb-4">
@@ -136,9 +167,9 @@ export default function CategoriasPage() {
             </div>
           )}
 
-          {!loading && !error && categories.length > 0 && (
+          {!loading && !error && displayedCategories.length > 0 && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {categories.map((category) => (
+              {displayedCategories.map((category) => (
                 <Card
                   key={category.id}
                   className="overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 cursor-pointer group"

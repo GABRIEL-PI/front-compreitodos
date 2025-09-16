@@ -10,6 +10,7 @@ import Header from "@/components/header"
 import Footer from "@/components/footer"
 import { fetchProducts, fetchCategories } from "@/lib/api"
 import { Product, Category } from "@/lib/types"
+import ProductModal from "@/components/product-modal"
 
 export default function OfertasPage() {
   const [products, setProducts] = useState<Product[]>([])
@@ -22,6 +23,8 @@ export default function OfertasPage() {
   const [currentPage, setCurrentPage] = useState(1)
   const [hasMore, setHasMore] = useState(true)
   const [totalProducts, setTotalProducts] = useState(0)
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
 
   const searchParams = useSearchParams()
 
@@ -37,6 +40,18 @@ export default function OfertasPage() {
   const calculateDiscount = (originalPrice: number, salePrice: number) => {
     const discount = ((originalPrice - salePrice) / originalPrice) * 100
     return Math.round(discount)
+  }
+
+  // Função para abrir modal do produto
+  const handleProductClick = (product: Product) => {
+    setSelectedProduct(product)
+    setIsModalOpen(true)
+  }
+
+  // Função para fechar modal
+  const handleCloseModal = () => {
+    setIsModalOpen(false)
+    setSelectedProduct(null)
   }
 
   // Carregar categorias
@@ -261,7 +276,8 @@ export default function OfertasPage() {
                         alt={product.title}
                         width={200}
                         height={200}
-                        className="w-full h-48 object-cover"
+                        className="w-full h-48 object-cover cursor-pointer"
+                        onClick={() => handleProductClick(product)}
                       />
                       {discount > 0 && (
                         <Badge className="absolute top-2 left-2 bg-red-600 text-white font-bold">
@@ -334,6 +350,13 @@ export default function OfertasPage() {
           )}
         </div>
       </section>
+
+      {/* Modal do Produto */}
+      <ProductModal
+        product={selectedProduct}
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+      />
       <Footer />
     </div>
   )

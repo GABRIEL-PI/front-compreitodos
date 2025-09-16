@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Search, Filter, Star } from "lucide-react"
 import { fetchProducts } from "@/lib/api"
 import { Product, Category } from "@/lib/types"
+import ProductModal from "@/components/product-modal"
 
 interface CategoryProductsClientProps {
   categorySlug: string
@@ -23,6 +24,20 @@ export default function CategoryProductsClient({ categorySlug, currentCategory, 
   const [currentPage, setCurrentPage] = useState(1)
   const [hasMore, setHasMore] = useState(true)
   const [totalProducts, setTotalProducts] = useState(0)
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
+
+  // Função para abrir modal do produto
+  const handleProductClick = (product: Product) => {
+    setSelectedProduct(product)
+    setIsModalOpen(true)
+  }
+
+  // Função para fechar modal
+  const handleCloseModal = () => {
+    setIsModalOpen(false)
+    setSelectedProduct(null)
+  }
 
   // Função para formatar preço
   const formatPrice = (price: number) => {
@@ -257,7 +272,8 @@ export default function CategoryProductsClient({ categorySlug, currentCategory, 
                         <img
                           src={product.image_url}
                           alt={product.title}
-                          className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+                          className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300 cursor-pointer"
+                          onClick={() => handleProductClick(product)}
                           onError={(e) => {
                             const target = e.target as HTMLImageElement
                             target.src = '/placeholder.jpg'
@@ -321,6 +337,13 @@ export default function CategoryProductsClient({ categorySlug, currentCategory, 
           )}
         </div>
       </section>
+
+      {/* Modal do Produto */}
+      <ProductModal
+        product={selectedProduct}
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+      />
     </>
   )
 }

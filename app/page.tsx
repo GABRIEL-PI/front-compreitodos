@@ -11,12 +11,15 @@ import Header from "@/components/header"
 import Footer from "@/components/footer"
 import { fetchProducts, fetchCategories } from "@/lib/api"
 import { Product, Category } from "@/lib/types"
+import ProductModal from "@/components/product-modal"
 
 export default function HomePage() {
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
 
   // Mapeamento de ícones para categorias
   const categoryIcons: { [key: string]: string } = {
@@ -63,6 +66,18 @@ export default function HomePage() {
       style: 'currency',
       currency: 'BRL'
     }).format(price)
+  }
+
+  // Função para abrir modal do produto
+  const handleProductClick = (product: Product) => {
+    setSelectedProduct(product)
+    setIsModalOpen(true)
+  }
+
+  // Função para fechar modal
+  const handleCloseModal = () => {
+    setIsModalOpen(false)
+    setSelectedProduct(null)
   }
 
   // Função para obter ícone da categoria
@@ -184,7 +199,8 @@ export default function HomePage() {
                       alt={product.title}
                       width={200}
                       height={200}
-                      className="w-full h-48 object-cover"
+                      className="w-full h-48 object-cover cursor-pointer"
+                      onClick={() => handleProductClick(product)}
                     />
                     <Badge className="absolute top-2 left-2 bg-red-600 text-white font-bold">
                       OFERTA
@@ -285,6 +301,13 @@ export default function HomePage() {
 
       {/* Footer */}
       <Footer />
+
+      {/* Modal do Produto */}
+      <ProductModal
+        product={selectedProduct}
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+      />
     </div>
   )
 }
